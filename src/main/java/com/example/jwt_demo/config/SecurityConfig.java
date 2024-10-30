@@ -2,10 +2,13 @@ package com.example.jwt_demo.config;
 
 import com.example.jwt_demo.filter.JwtRequestFilter;
 import com.example.jwt_demo.service.CustomUserDetailsService;
+import com.example.jwt_demo.service.VendorDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,57 +18,24 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtRequestFilter jwtRequestFilter;
     private final CustomUserDetailsService customUserDetailsService;
+    private final VendorDetailsService vendorDetailsService;
 
-    // Constructor injection
-    public SecurityConfig(JwtRequestFilter jwtRequestFilter, CustomUserDetailsService customUserDetailsService) {
+    public SecurityConfig(
+            JwtRequestFilter jwtRequestFilter,
+            CustomUserDetailsService customUserDetailsService,
+            VendorDetailsService vendorDetailsService
+    ) {
         this.jwtRequestFilter = jwtRequestFilter;
         this.customUserDetailsService = customUserDetailsService;
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
-                        // Swagger UI endpoints
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/swagger-ui.html").permitAll()
-                        .requestMatchers("/api-docs/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-resources/**").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
-
-                        // Your API endpoints
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/yogic_attraction/**").permitAll()
-                        .requestMatchers("/api/vendor/**").authenticated()
-                        .requestMatchers("/api/user/**").authenticated()
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
+        this.vendorDetailsService = vendorDetailsService;
     }
 
     @Bean
@@ -74,7 +44,81 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
+    public DaoAuthenticationProvider userAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(customUserDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Bean
+    public DaoAuthenticationProvider vendorAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(vendorDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Primary
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(Arrays.asList(
+                userAuthenticationProvider(),
+                vendorAuthenticationProvider()
+        ));
+    }
+
+    @Bean
+    @Order(1)
+    public SecurityFilterChain vendorSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/api/vendor/**")
+                .csrf(csrf -> csrf.disable())
+                .authenticationProvider(vendorAuthenticationProvider())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/vendor/login", "/api/vendor/signup").permitAll()
+                        .requestMatchers("/api/vendor/**").hasAuthority("VENDOR")
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    @Bean
+    @Order(2)
+    public SecurityFilterChain userSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher("/api/user/**")
+                .csrf(csrf -> csrf.disable())
+                .authenticationProvider(userAuthenticationProvider())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/user/login", "/api/user/signup").permitAll()
+                        .requestMatchers("/api/user/**").hasAuthority("USER")
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    @Bean
+    @Order(3)
+    public SecurityFilterChain yogicAndSwaggerSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**",
+                                "/swagger-resources/**", "/webjars/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/yogic_attraction/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 }

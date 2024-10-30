@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -31,7 +32,7 @@ public class UserController {
     private final UserService userService;
 
     public UserController(AuthenticationManager authenticationManager,
-                          UserDetailsService userDetailsService,
+                          @Qualifier("userDetailsService") UserDetailsService userDetailsService,
                           UserService userService) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;

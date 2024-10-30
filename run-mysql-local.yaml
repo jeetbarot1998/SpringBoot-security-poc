@@ -1,23 +1,22 @@
 version: '3.8'
 
 services:
-  mysql:
-    image: mysql:8.0
-    container_name: vendor_portal_mysql
+  postgres:
+    image: postgres:13
+    container_name: vendor_portal_postgres
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: vendor_portal
-      MYSQL_USER: vendor_app
-      MYSQL_PASSWORD: vendor_password
+      POSTGRES_DB: vendor_portal
+      POSTGRES_USER: vendor_app
+      POSTGRES_PASSWORD: vendor_password
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
-    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U vendor_app"]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 5
 
 volumes:
-  mysql_data:
+  postgres_data:
