@@ -27,6 +27,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
 @RequestMapping("/api/vendor")
 @Tag(name = "Vendor Authentication", description = "Vendor authentication management APIs")
@@ -126,42 +128,4 @@ public class VendorAuthController {
                     .body(new AuthResponse("Invalid username or password", null));
         }
     }
-
-    @Operation(summary = "Test API Vendor",
-            description = "Test API for vendor API",
-            security = { @SecurityRequirement(name = "Bearer Authentication") })
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Authentication successful",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = AuthResponse.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Invalid credentials or vendor not verified",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = AuthResponse.class)
-                    )
-            )
-    })
-    @PostMapping("/test")
-    public ResponseEntity<?> test(@RequestBody AuthRequest loginRequest) {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            System.out.println(authentication);
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(new AuthResponse("Vendor Test API", null));
-        } catch (AuthenticationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(new AuthResponse("Invalid username or password", null));
-        }
-    }
-
 }

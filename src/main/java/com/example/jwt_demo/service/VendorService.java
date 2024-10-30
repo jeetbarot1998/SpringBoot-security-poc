@@ -3,13 +3,18 @@ package com.example.jwt_demo.service;
 import com.example.jwt_demo.model.Vendor;
 import com.example.jwt_demo.model.SignupRequest;
 import com.example.jwt_demo.repository.vendor.VendorRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.util.List;
 
 @Service
+@Transactional
 public class VendorService {
     @Autowired
     private VendorRepository vendorRepository;
@@ -30,6 +35,12 @@ public class VendorService {
 //        vendor.setValidationStatus(Vendor.ValidationStatus.PENDING);
 
         return vendorRepository.save(vendor);
+    }
+
+    public Vendor getCurrentVendor(Principal principal) {
+        String email = ((UsernamePasswordAuthenticationToken) principal).getName();
+        return vendorRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Vendor not found"));
     }
 
     public List<Vendor> getAllVendors() {

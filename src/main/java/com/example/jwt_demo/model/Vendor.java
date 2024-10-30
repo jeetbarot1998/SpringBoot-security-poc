@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -137,5 +138,38 @@ public class Vendor implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<FoodItem> foodItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Event> events = new ArrayList<>();
+
+    @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Accommodation> accommodations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "vendor", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<TouristGuide> touristSpots = new ArrayList<>();
+
+    // Helper methods for bidirectional relationship
+    public void addFoodItem(FoodItem foodItem) {
+        foodItems.add(foodItem);
+        foodItem.setVendor(this);
+    }
+
+    public void addEvent(Event event) {
+        events.add(event);
+        event.setVendor(this);
+    }
+
+    public void addAccommodation(Accommodation accommodation) {
+        accommodations.add(accommodation);
+        accommodation.setVendor(this);
+    }
+
+    public void addTouristSpot(TouristGuide touristSpot) {
+        touristSpots.add(touristSpot);
+        touristSpot.setVendor(this);
     }
 }
