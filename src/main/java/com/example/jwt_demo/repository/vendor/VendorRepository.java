@@ -1,4 +1,4 @@
-package com.example.jwt_demo.repository;
+package com.example.jwt_demo.repository.vendor;
 
 import com.example.jwt_demo.model.Vendor;
 import org.springframework.data.jpa.repository.JpaRepository;

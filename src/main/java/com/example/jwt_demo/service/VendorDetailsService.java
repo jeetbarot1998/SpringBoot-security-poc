@@ -1,6 +1,6 @@
 package com.example.jwt_demo.service;
 
-import com.example.jwt_demo.repository.VendorRepository;
+import com.example.jwt_demo.repository.vendor.VendorRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

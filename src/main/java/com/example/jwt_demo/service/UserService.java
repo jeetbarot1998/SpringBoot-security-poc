@@ -2,7 +2,7 @@ package com.example.jwt_demo.service;
 
 import com.example.jwt_demo.model.User;
 import com.example.jwt_demo.model.SignupRequest;
-import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

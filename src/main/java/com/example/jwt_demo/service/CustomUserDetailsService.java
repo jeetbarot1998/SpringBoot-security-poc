@@ -1,8 +1,7 @@
 package com.example.jwt_demo.service;
 
-import com.example.jwt_demo.repository.UserRepository;
+import com.example.jwt_demo.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

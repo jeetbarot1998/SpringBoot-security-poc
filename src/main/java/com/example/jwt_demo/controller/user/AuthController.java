@@ -1,12 +1,12 @@
-package com.example.jwt_demo.controller;
+package com.example.jwt_demo.controller.user;
 
 import com.example.jwt_demo.model.AuthRequest;
 import com.example.jwt_demo.model.SignupRequest;
-import com.example.jwt_demo.model.Vendor;
+import com.example.jwt_demo.model.User;
 import com.example.jwt_demo.model.AuthResponse;
-import com.example.jwt_demo.service.VendorDetailsService;
+import com.example.jwt_demo.service.CustomUserDetailsService;
 import com.example.jwt_demo.service.JwtUtil;
-import com.example.jwt_demo.service.VendorService;
+import com.example.jwt_demo.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,37 +27,40 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/vendor")
-@Tag(name = "Vendor Authentication", description = "Vendor authentication management APIs")
+@RequestMapping("/api/user")
+@Tag(name = "User", description = "User management APIs")
 @CrossOrigin(origins = "*", maxAge = 3600)
-public class VendorAuthController {
+//@SecurityRequirement(name = "Bearer Authentication")  // Add this to secure all endpoints in this controller
+public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final VendorDetailsService vendorDetailsService;
-    private final VendorService vendorService;
+    private final CustomUserDetailsService userDetailsService;
+    private final UserService userService;
     private final JwtUtil jwtUtil;
 
-    public VendorAuthController(AuthenticationManager authenticationManager,
-                                @Qualifier("vendorDetailsService") VendorDetailsService vendorDetailsService,
-                                VendorService vendorService,
-                                JwtUtil jwtUtil) {
+    public AuthController(AuthenticationManager authenticationManager,
+                          @Qualifier("userDetailsService") CustomUserDetailsService userDetailsService,
+                          UserService userService,
+                          JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
-        this.vendorDetailsService = vendorDetailsService;
-        this.vendorService = vendorService;
+        this.userDetailsService = userDetailsService;
+        this.userService = userService;
         this.jwtUtil = jwtUtil;
     }
 
-    @Operation(summary = "Register a new vendor",
-            description = "Creates a new vendor account with the provided credentials",
-            security = {})
+    @Operation(summary = "Register a new user",
+            description = "Creates a new user account with the provided email and password",
+            security = {})  // Empty security requirements -> no authentication needed
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Vendor registered successfully",
+                    description = "User registered successfully",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = AuthResponse.class)
+                            schema = @Schema(implementation = String.class)
                     )
             ),
             @ApiResponse(
@@ -65,7 +68,7 @@ public class VendorAuthController {
                     description = "Invalid input or email already exists",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = AuthResponse.class)
+                            schema = @Schema(implementation = String.class)
                     )
             )
     })
@@ -74,10 +77,10 @@ public class VendorAuthController {
             @Parameter(description = "Signup credentials", required = true)
             @RequestBody SignupRequest signupRequest) {
         try {
-            Vendor vendor = vendorService.signup(signupRequest);
+            User user = userService.signup(signupRequest);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new AuthResponse("Vendor registered successfully.", null));
+                    .body(new AuthResponse("User registered successfully", null));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .contentType(MediaType.APPLICATION_JSON)
@@ -85,9 +88,9 @@ public class VendorAuthController {
         }
     }
 
-    @Operation(summary = "Authenticate vendor",
-            description = "Authenticates vendor credentials and returns JWT token",
-            security = {})
+    @Operation(summary = "Authenticate user",
+            description = "Authenticates user credentials and returns JWT token",
+            security = {})  // Empty security requirements -> no authentication needed
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
@@ -99,7 +102,7 @@ public class VendorAuthController {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Invalid credentials or vendor not verified",
+                    description = "Invalid credentials",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = AuthResponse.class)
@@ -109,26 +112,51 @@ public class VendorAuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest loginRequest) {
         try {
-            UserDetails vendorDetails = vendorDetailsService.loadUserByUsername(loginRequest.getEmail());
-
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
 
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
             );
 
-            String token = jwtUtil.generateToken(vendorDetails);
+            String token = jwtUtil.generateToken(userDetails);
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new AuthResponse("Authentication successful", token));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(new AuthResponse("Invalid username or password", null));
+                    .body(new AuthResponse("Authentication successful", null));
         }
     }
 
-    @Operation(summary = "Test API Vendor",
-            description = "Test API for vendor API",
+
+    @Operation(summary = "Get all users",
+            description = "Retrieves a list of all registered users")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved all users",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = User.class, type = "array")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized access",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = String.class)
+                    )
+            )
+    })
+    @GetMapping("/getAllUsers")
+    public List<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+
+    @Operation(summary = "Test API User",
+            description = "Test API for user API",
             security = { @SecurityRequirement(name = "Bearer Authentication") })
     @ApiResponses(value = {
             @ApiResponse(
@@ -148,20 +176,19 @@ public class VendorAuthController {
                     )
             )
     })
-    @PostMapping("/test")
-    public ResponseEntity<?> test(@RequestBody AuthRequest loginRequest) {
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             System.out.println(authentication);
 
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new AuthResponse("Vendor Test API", null));
+                    .body(new AuthResponse("User Test API", null));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new AuthResponse("Invalid username or password", null));
         }
     }
-
 }
