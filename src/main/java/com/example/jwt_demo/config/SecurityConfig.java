@@ -10,7 +10,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 
 @Configuration
@@ -73,11 +73,18 @@ public class SecurityConfig {
     public SecurityFilterChain vendorSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/vendor/**")
+                .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf.disable())
                 .authenticationProvider(vendorAuthenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/vendor/login", "/api/vendor/signup").permitAll()
-                        .requestMatchers("/api/vendor/**").hasAuthority("VENDOR")
+                        .requestMatchers("/api/vendor/**").authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("Unauthorized: " + authException.getMessage());
+                        })
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -91,11 +98,18 @@ public class SecurityConfig {
     public SecurityFilterChain userSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/api/user/**")
+                .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf.disable())
                 .authenticationProvider(userAuthenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user/login", "/api/user/signup").permitAll()
-                        .requestMatchers("/api/user/**").hasAuthority("USER")
+                        .requestMatchers("/api/user/**").authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("Unauthorized: " + authException.getMessage());
+                        })
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -108,6 +122,7 @@ public class SecurityConfig {
     @Order(3)
     public SecurityFilterChain yogicAndSwaggerSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
+                .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/api-docs/**", "/v3/api-docs/**",

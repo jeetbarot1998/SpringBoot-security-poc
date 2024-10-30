@@ -26,8 +26,8 @@ public class VendorService {
         vendor.setEmail(signupRequest.getEmail());
         vendor.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
         vendor.setRole("VENDOR"); // Default role
-        vendor.setValidationFlag(false); // Needs admin validation
-        vendor.setValidationStatus(Vendor.ValidationStatus.PENDING);
+//        vendor.setValidationFlag(false); // Needs admin validation
+//        vendor.setValidationStatus(Vendor.ValidationStatus.PENDING);
 
         return vendorRepository.save(vendor);
     }

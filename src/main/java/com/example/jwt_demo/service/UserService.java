@@ -25,7 +25,7 @@ public class UserService {
         User user = new User();
         user.setEmail(signupRequest.getEmail());
         user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
-        user.setRole("ROLE_USER"); // Default role
+        user.setRole("USER"); // Default role
 
         return userRepository.save(user);
     }
