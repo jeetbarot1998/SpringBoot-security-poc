@@ -119,7 +119,7 @@ public class AuthController {
                     .body(new AuthResponse("Authentication successful", token));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid username or password");
+                    .body(new AuthResponse("Authentication successful", null));
         }
     }
 }

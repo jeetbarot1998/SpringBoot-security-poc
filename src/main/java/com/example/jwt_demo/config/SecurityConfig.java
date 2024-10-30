@@ -78,7 +78,7 @@ public class SecurityConfig {
                 .authenticationProvider(vendorAuthenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/vendor/login", "/api/vendor/signup").permitAll()
-                        .requestMatchers("/api/vendor/**").authenticated()
+                        .requestMatchers("/api/vendor/**").hasAuthority("VENDOR")
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -103,7 +103,7 @@ public class SecurityConfig {
                 .authenticationProvider(userAuthenticationProvider())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/user/login", "/api/user/signup").permitAll()
-                        .requestMatchers("/api/user/**").authenticated()
+                        .requestMatchers("/api/user/**").hasAuthority("USER")
                 )
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {

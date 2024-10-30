@@ -97,7 +97,7 @@ public class UserController {
 
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(new AuthResponse("Hello Test API", null));
+                    .body(new AuthResponse("User Test API", null));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .contentType(MediaType.APPLICATION_JSON)
