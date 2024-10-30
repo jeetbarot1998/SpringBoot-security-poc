@@ -1,5 +1,6 @@
 package com.example.jwt_demo.controller.user;
 
+import com.example.jwt_demo.config.Views;
 import com.example.jwt_demo.model.AuthRequest;
 import com.example.jwt_demo.model.SignupRequest;
 import com.example.jwt_demo.model.User;
@@ -7,6 +8,7 @@ import com.example.jwt_demo.model.AuthResponse;
 import com.example.jwt_demo.service.CustomUserDetailsService;
 import com.example.jwt_demo.service.JwtUtil;
 import com.example.jwt_demo.service.UserService;
+import com.fasterxml.jackson.annotation.JsonView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -150,6 +152,7 @@ public class AuthController {
             )
     })
     @GetMapping("/getAllUsers")
+    @JsonView(Views.Public.class)
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }

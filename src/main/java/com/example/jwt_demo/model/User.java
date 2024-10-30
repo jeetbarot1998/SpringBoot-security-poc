@@ -1,5 +1,7 @@
 package com.example.jwt_demo.model;
 
+import com.example.jwt_demo.config.Views;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -21,21 +23,27 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonView({Views.Public.class})
     private Long id;
 
     @NotBlank
     @Email
     @Column(unique = true)
+    @JsonView({Views.Public.class})
     private String email;
 
     @NotBlank
+    @JsonView(Views.Internal.class)  // Only visible in Internal and Admin views
     private String password;
 
     @NotBlank
+    @JsonView({Views.Public.class})
     private String role;
 
+    @JsonView({Views.Public.class})
     private String firstName;
 
+    @JsonView({Views.Public.class})
     private String lastName;
 
     @Column(name = "validation_flag")
@@ -45,6 +53,7 @@ public class User implements UserDetails {
     private String validationVideoUrl;
 
     @Column(name = "created_at")
+    @JsonView({Views.Public.class})
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
